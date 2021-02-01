@@ -1,15 +1,24 @@
 package com.solvd.market.operation;
 
+import com.solvd.market.Executor;
+import com.solvd.market.shop.Food;
 import com.solvd.market.shop.MeatProduct;
 import com.solvd.market.shop.MilkProducts;
+import com.solvd.market.utils.JsonExec;
+import com.solvd.market.utils.ReadingFromFile;
 import com.solvd.market.utils.WritingToFile;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import org.apache.log4j.Logger;
+
 
 public class MenuFood extends Menu {
+    private final static Logger LOGGER = Logger.getLogger(MenuFood.class);
         MilkProducts milkProducts = new MilkProducts();
     List<MilkProducts> milkList;
     List<MeatProduct> meatList;
@@ -25,49 +34,71 @@ public class MenuFood extends Menu {
         int typeOfProduct = typeOfProductSc.nextInt();
         switch (typeOfProduct){
             case 1:
+                LOGGER.info("Start work with milk product");
                 addMilkProduct();
+
             case 2:
+                LOGGER.info("Start work with meat product");
                 addMeatProduct();
         }
     }
-        String typeProd;
+
     public void addMilkProduct() {
+        System.out.println("Print" + " type of milk product :");
+        System.out.println("Milk, Cheese, Yoghurt, Butter");
         String typeOfFood = typeOfFood();
         String consoleName = consoleName();
         String consoleExpDate = consoleExpDate();
         String quantity = quantity();
         MilkProducts milkProducts = new MilkProducts(typeOfFood,consoleName, consoleExpDate, quantity);
+        LOGGER.info("Object was created");
         addMilkToList(milkProducts);
+        LOGGER.info("Info was added to object!");
+        JsonExec jsonAction = new JsonExec();
+        jsonAction.convertJavaToJsonFile(milkProducts, "milkProd.json");
         findLocalStorage(typeOfFood,consoleName,consoleExpDate, quantity);
         System.out.println("Do you want to add again ?(y/n)");
         Scanner addAgain = new Scanner(System.in);
         if (addAgain.nextLine().equalsIgnoreCase("y")) {
             addMilkProduct();
-        }
+            LOGGER.info("Returned to addMilkProduct");
+        }else LOGGER.info("Returning was stopped");
         for (int i = 0; i <= 1; i++) {
+            LOGGER.info("reading menu number");
             int menuGetNumber = menu();
+            LOGGER.info("number was read"+menuGetNumber);
             switch (menuGetNumber) {
                 case 1:
                     removeMilkProduct(milkProducts);
-                    System.out.println("Meat is removed ");
+                    LOGGER.info("Meat is removed ");
                     break;
                 case 2:
-                    System.out.println("Milk list");
+                    LOGGER.info("Milk info");
                     printMilkList();
                     break;
-
                 case 3:
+                    LOGGER.info("SYSTEM EXIT");
                     System.exit(0);
                     break;
                 case 4:
+                    LOGGER.info("Returned to adding milk product");
                     addMilkProduct();
                     break;
             }
         }
     }
 
-    public void addMeatProduct() {
+    public void readJsonConvertToPojo(){
+        ReadingFromFile read = new ReadingFromFile();
+        String strRead = read.readingFromFile("milkProd.json");
+        JsonExec jsonToPojo = new JsonExec();
+        Food food = jsonToPojo.convertToPojo(strRead);
+        LOGGER.info(food.getFoodName());
+    }
 
+
+
+    public void addMeatProduct() {
         String typeOfFood = typeOfFood();
         String consoleName = consoleName();
         String consoleExpDate = consoleExpDate();
@@ -103,18 +134,31 @@ public class MenuFood extends Menu {
     }
 
     public void findLocalStorage(String typeOfFood, String consoleName, String expDate, String quantity){
-        if(typeOfFood.equalsIgnoreCase("milk")){
-            WritingToFile wr = new WritingToFile();
-            wr.WrToFile("C:/Users/user/Desktop/MilkProduct/MilkProduct.txt", typeOfFood, consoleName, expDate,quantity);
-        }else if(typeOfFood.equalsIgnoreCase("chese")){
-            WritingToFile wr = new WritingToFile();
-            wr.WrToFile("C:/Users/user/Desktop/MilkProduct/CheseProduct.txt", typeOfFood, consoleName, expDate,quantity);
-        }
+            if (typeOfFood.equalsIgnoreCase("milk")) {
+                LOGGER.info("Type of product was found in local storage");
+                WritingToFile wr = new WritingToFile();
+                wr.WrToFile("C:/Users/user/Desktop/MilkProduct/MilkProduct.txt", typeOfFood, consoleName, expDate, quantity);
+                LOGGER.info("Object was added to local storage!");
+            } else if (typeOfFood.equalsIgnoreCase("Cheese")) {
+                LOGGER.info("Type of product was found in local storage");
+                WritingToFile wr = new WritingToFile();
+                wr.WrToFile("C:/Users/user/Desktop/MilkProduct/CheeseProduct.txt", typeOfFood, consoleName, expDate, quantity);
+                LOGGER.info("Object was added to local storage!");
+            } else {
+                LOGGER.error("Product    " + typeOfFood + "   not exist in local storage. Start again please !!!!!!");
+                System.out.println("Do you want more info about error ?(y/n)");
+                Scanner errorSc = new Scanner(System.in);
+                String error = errorSc.nextLine();
+                if (error.equalsIgnoreCase("y")) {
+                    System.out.println("Product " + typeOfFood + " was not added to local storage.");
+                    System.out.println("You should chose a type of product from the list showed for you, for example (Milk, Cheese...) ");
+                }
+            }
+
+
     }
 
     public String typeOfFood(){
-        System.out.println("Print plese type of product");
-        System.out.println("Print, milk, chese, yourt");
         Scanner typeOfProductSc = new Scanner(System.in);
         String typeOfProduct = typeOfProductSc.nextLine();
         while(typeOfProduct.isEmpty()){
